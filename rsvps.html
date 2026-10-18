@@ -232,7 +232,7 @@
         }
 
         async function fetchRows(code) {
-            const { data, error } = await db.rpc("get_wedding_rsvps", { passcode: code });
+            const { data, error } = await db.rpc("get_moussa_sara_rsvp", { passcode: code });
             if (error) throw error;
             if (!data.ok) throw Object.assign(new Error(data.error), { code: data.error });
             return data.rows;

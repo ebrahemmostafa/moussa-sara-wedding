@@ -31309,7 +31309,7 @@ function x3() {
             };
             const {
                 error: r
-            } = await rd.from("wedding_rsvps").insert(n);
+            } = await rd.from("moussa-sara-rsvp").insert(n);
             if (r) throw r;
             return {
                 isUpdate: !1
