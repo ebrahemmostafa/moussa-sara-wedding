@@ -26,20 +26,37 @@ create policy "guests can submit" on public.wedding_rsvps
 grant insert (full_name, email, attendance, guest_count, adult_count, children_count, dietary_requirements, message)
   on public.wedding_rsvps to anon;
 
+-- Wrong passcode attempts, used to lock the page after too many guesses.
+create table if not exists public.wedding_rsvp_attempts (
+  at timestamptz not null default now()
+);
+alter table public.wedding_rsvp_attempts enable row level security;
+revoke all on public.wedding_rsvp_attempts from anon, authenticated;
+
 -- rsvps.html reads the list through this function, which checks the passcode
--- on the server. A wrong passcode waits 2 seconds to slow down guessing.
+-- on the server. After 20 wrong guesses in 10 minutes it refuses everyone
+-- (even the right passcode) until the window passes.
+drop function if exists public.get_wedding_rsvps(text);
 create or replace function public.get_wedding_rsvps(passcode text)
-returns setof public.wedding_rsvps
+returns json
 language plpgsql
 security definer
 set search_path = public
 as $$
 begin
-  if passcode is distinct from 'YOUR-PASSCODE' then
-    perform pg_sleep(2);
-    raise exception 'Wrong passcode' using errcode = '28P01';
+  -- One check at a time, so parallel guesses can't slip past the counter.
+  perform pg_advisory_xact_lock(20261120);
+  delete from public.wedding_rsvp_attempts where at < now() - interval '1 day';
+  if (select count(*) from public.wedding_rsvp_attempts where at > now() - interval '10 minutes') >= 20 then
+    return json_build_object('ok', false, 'error', 'locked');
   end if;
-  return query select * from public.wedding_rsvps order by created_at desc;
+  if passcode is distinct from 'YOUR-PASSCODE' then
+    insert into public.wedding_rsvp_attempts default values;
+    perform pg_sleep(2);
+    return json_build_object('ok', false, 'error', 'wrong');
+  end if;
+  return json_build_object('ok', true, 'rows', coalesce(
+    (select json_agg(r order by r.created_at desc) from public.wedding_rsvps r), '[]'::json));
 end;
 $$;
 

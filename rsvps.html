@@ -234,7 +234,8 @@
         async function fetchRows(code) {
             const { data, error } = await db.rpc("get_wedding_rsvps", { passcode: code });
             if (error) throw error;
-            return data;
+            if (!data.ok) throw Object.assign(new Error(data.error), { code: data.error });
+            return data.rows;
         }
 
         async function poll() {
@@ -284,7 +285,7 @@
             } catch (err) {
                 btn.disabled = false;
                 try { sessionStorage.removeItem(CODE_KEY); } catch {}
-                if (!quiet) $("loginError").textContent = err.code === "28P01" ? "Wrong passcode" : "Could not connect: " + err.message;
+                if (!quiet) $("loginError").textContent = err.code === "wrong" ? "Wrong passcode" : err.code === "locked" ? "Too many wrong tries. Please wait 10 minutes." : "Could not connect: " + err.message;
                 showLogin();
                 return;
             }
