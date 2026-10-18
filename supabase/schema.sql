@@ -33,7 +33,10 @@ create policy "admins can read" on public.rsvps
   for select to authenticated
   using (exists (select 1 from public.rsvp_admins a where a.user_id = auth.uid()));
 
-grant insert on public.rsvps to anon;
+-- Guests may only fill in the form fields; id and created_at are always set by the database.
+revoke insert on public.rsvps from anon;
+grant insert (full_name, email, attendance, guest_count, adult_count, children_count, dietary_requirements, message)
+  on public.rsvps to anon;
 grant select on public.rsvps to authenticated;
 
 -- Live updates on rsvps.html
