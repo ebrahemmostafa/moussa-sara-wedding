@@ -20,10 +20,18 @@ drop policy if exists "guests can submit" on public.rsvps;
 create policy "guests can submit" on public.rsvps
   for insert to anon with check (true);
 
--- Only signed-in admins (users you create in Authentication → Users) can read.
+-- Only accounts listed in rsvp_admins can read. Being signed in is not enough,
+-- because Supabase allows public sign-ups unless you turn them off.
+create table if not exists public.rsvp_admins (
+  user_id uuid primary key references auth.users (id) on delete cascade
+);
+alter table public.rsvp_admins enable row level security;
+revoke all on public.rsvp_admins from anon, authenticated;
+
 drop policy if exists "admins can read" on public.rsvps;
 create policy "admins can read" on public.rsvps
-  for select to authenticated using (true);
+  for select to authenticated
+  using (exists (select 1 from public.rsvp_admins a where a.user_id = auth.uid()));
 
 grant insert on public.rsvps to anon;
 grant select on public.rsvps to authenticated;
@@ -32,3 +40,10 @@ grant select on public.rsvps to authenticated;
 do $$ begin
   alter publication supabase_realtime add table public.rsvps;
 exception when duplicate_object then null; end $$;
+
+-- After creating your admin user(s) in Authentication → Users, add each one:
+--   insert into public.rsvp_admins (user_id)
+--   select id from auth.users where email = 'you@example.com';
+--
+-- Also recommended: Authentication → Sign In / Providers → Email →
+-- turn OFF "Allow new users to sign up".
