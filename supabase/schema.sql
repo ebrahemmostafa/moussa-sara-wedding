@@ -35,7 +35,8 @@ revoke all on public."moussa-sara-rsvp-attempts" from anon, authenticated;
 
 -- rsvps.html reads the list through this function, which checks the passcode
 -- on the server. After 20 wrong guesses in 10 minutes it refuses everyone
--- (even the right passcode) until the window passes.
+-- (even the right passcode) until the window passes. No delay on wrong
+-- guesses: a slow request could time out and roll back its own failure record.
 drop function if exists public.get_moussa_sara_rsvp(text);
 create or replace function public.get_moussa_sara_rsvp(passcode text)
 returns json
@@ -44,7 +45,7 @@ security definer
 set search_path = public
 as $$
 begin
-  -- One check at a time, so parallel guesses can't slip past the counter.
+  -- One check at a time (milliseconds each), so parallel guesses can't slip past the counter.
   perform pg_advisory_xact_lock(20261120);
   delete from public."moussa-sara-rsvp-attempts" where at < now() - interval '1 day';
   if (select count(*) from public."moussa-sara-rsvp-attempts" where at > now() - interval '10 minutes') >= 20 then
@@ -52,7 +53,6 @@ begin
   end if;
   if passcode is distinct from 'YOUR-PASSCODE' then
     insert into public."moussa-sara-rsvp-attempts" default values;
-    perform pg_sleep(2);
     return json_build_object('ok', false, 'error', 'wrong');
   end if;
   return json_build_object('ok', true, 'rows', coalesce(
