@@ -16100,7 +16100,7 @@ const lD = {
         en: {
             "hero.subtitle": "We're getting married",
             "hero.date": "20 November 2026",
-            "hero.rsvp": "Scroll Down",
+            "hero.rsvp": "RSVP",
             "countdown.title": "Countdown",
             "countdown.until": "Until 20 November 2026",
             "countdown.days": "Days",
@@ -22013,7 +22013,7 @@ function zF({
     const {
         t: n
     } = At(), r = () => {
-        const s = document.getElementById("countdown");
+        const s = document.getElementById("rsvp");
         s == null || s.scrollIntoView({
             behavior: "smooth"
         })
@@ -31287,8 +31287,8 @@ function y3() {
     return t ? parseInt(t[1], 10) <= 18 : !1
 }
 y3() && console.warn("⚠️  Node.js 18 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 20 or later. For more information, visit: https://github.com/orgs/supabase/discussions/37217");
-const v3 = "https://etxixznvxwjjkivempzk.supabase.co",
-    w3 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0eGl4em52eHdqamtpdmVtcHprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTY4NTYsImV4cCI6MjA4NzI5Mjg1Nn0.DAZmYr0Q-JQ_DpOqyNQalAzEm-yEauvX0aRRo3oDV4M",
+const v3 = (window.SUPABASE_CONFIG || {}).url || "https://YOUR-PROJECT.supabase.co",
+    w3 = (window.SUPABASE_CONFIG || {}).anonKey || "YOUR-ANON-KEY",
     rd = g3(v3, w3, {
         auth: {
             storage: localStorage,
@@ -31301,13 +31301,16 @@ function x3() {
     return iE({
         mutationFn: async e => {
             const {
-                data: t,
-                error: n
-            } = await rd.functions.invoke("submit-rsvp", {
-                body: e
-            });
-            if (n) throw n;
-            if (t != null && t.error) throw new Error(t.error);
+                website: t,
+                ...n
+            } = e;
+            if (t) return {
+                isUpdate: !1
+            };
+            const {
+                error: r
+            } = await rd.from("rsvps").insert(n);
+            if (r) throw r;
             return {
                 isUpdate: !1
             }
@@ -31365,7 +31368,7 @@ function S3({
     const w = () => {
         const S = `Wedding ${t} & ${n}`,
             E = `Wedding of ${t} and ${n}`,
-            _ = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(S)}&dates=${x}T140000/${x}T235900&location=${encodeURIComponent(s)}&details=${encodeURIComponent(E)}`;
+            _ = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(S)}&dates=${x}T170000/${x}T210000&ctz=Africa/Cairo&location=${encodeURIComponent(s)}&details=${encodeURIComponent(E)}`;
         window.open(_, "_blank")
     };
     return e === "no" ? h.jsx("section", {
@@ -32148,7 +32151,14 @@ const P3 = "./assets/images/floral-vase-6x28LN74.png",
                         })
                     }, `gb-${n}`))]
                 })
-            }),  h.jsx("div", {
+            }), h.jsx("div", {
+                className: "bg-ivory flex justify-center py-10 md:py-14",
+                children: h.jsx("img", {
+                    src: D3,
+                    alt: "",
+                    className: "w-32 md:w-40 h-auto opacity-80"
+                })
+            }), h.jsx(E3, {}), h.jsx("div", {
                 className: "bg-ivory flex justify-center py-16 md:py-20",
                 children: h.jsx("img", {
                     src: I3,

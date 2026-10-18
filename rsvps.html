@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" style="color-scheme: light only">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>RSVPs · Sara &amp; Moussa</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="css/typekit-xoc5iak.css">
+    <style>
+        :root {
+            --sage-dark: hsl(33 47% 35%);
+            --sage-soft: hsl(33 30% 50%);
+            --gold: hsl(38 43% 60%);
+            --gold-band: #c5a46d;
+            --ivory: hsl(40 37% 96%);
+            --card: #fff;
+            --line: hsl(38 43% 60% / .25);
+            --yes: hsl(140 30% 38%);
+            --no: hsl(0 45% 48%);
+            --font-display: "sweet-fancy-script", cursive;
+            --font-body: "arek-armenian", Georgia, serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--ivory) url("assets/images/white-textured-paper-KasY8RAJ.png") center / cover fixed;
+            color: var(--sage-dark);
+            font-family: var(--font-body);
+            min-height: 100vh;
+        }
+        header { text-align: center; padding: 40px 16px 8px; }
+        header h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(40px, 9vw, 64px); margin: 0; line-height: 1.1; }
+        header p { margin: 6px 0 0; letter-spacing: .25em; text-transform: uppercase; font-size: 12px; color: var(--sage-soft); }
+        main { max-width: 1000px; margin: 0 auto; padding: 16px 16px 64px; }
+        .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 6px 24px hsl(33 47% 35% / .06); }
+        .hidden { display: none !important; }
+
+        /* login */
+        #login { max-width: 380px; margin: 24px auto; padding: 28px 24px; }
+        #login h2 { font-family: var(--font-display); font-weight: 400; font-size: 34px; margin: 0 0 16px; text-align: center; }
+        label { display: block; font-size: 13px; letter-spacing: .08em; margin: 12px 0 6px; }
+        input, select {
+            width: 100%; padding: 10px 12px; font: inherit; color: inherit;
+            border: 1px solid hsl(33 47% 35% / .25); border-radius: 8px; background: #fff;
+        }
+        input:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+        button {
+            font: inherit; cursor: pointer; border-radius: 999px; padding: 10px 18px;
+            border: 1px solid var(--sage-dark); background: var(--sage-dark); color: #fff; letter-spacing: .08em;
+        }
+        button.ghost { background: transparent; color: var(--sage-dark); border-color: hsl(33 47% 35% / .35); }
+        button:hover { filter: brightness(1.08); }
+        #login button { width: 100%; margin-top: 20px; }
+        .error { color: var(--no); font-size: 14px; margin-top: 12px; min-height: 1em; text-align: center; }
+
+        /* dashboard */
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .toolbar .who { font-size: 13px; color: var(--sage-soft); }
+        .toolbar .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat { padding: 16px; text-align: center; }
+        .stat .num { font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+        .stat .lbl { margin-top: 6px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+        .filters { display: grid; grid-template-columns: 1fr 180px; gap: 10px; margin-bottom: 16px; }
+        .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sage-soft); }
+        .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sage-soft); }
+        .live.on::before { background: var(--yes); box-shadow: 0 0 0 3px hsl(140 30% 38% / .2); }
+
+        .list { display: grid; gap: 12px; }
+        .rsvp { padding: 16px 18px; }
+        .rsvp.new { border-color: var(--gold); box-shadow: 0 0 0 2px hsl(38 43% 60% / .35); }
+        .rsvp .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+        .rsvp .name { font-size: 19px; font-weight: 600; }
+        .rsvp .when { font-size: 12px; color: var(--sage-soft); }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .tag { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); }
+        .tag.yes { color: var(--yes); border-color: hsl(140 30% 38% / .35); background: hsl(140 30% 38% / .07); }
+        .tag.no { color: var(--no); border-color: hsl(0 45% 48% / .35); background: hsl(0 45% 48% / .06); }
+        .tag.badge { background: var(--gold); border-color: var(--gold); color: #fff; }
+        .rsvp dl { margin: 10px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 14px; }
+        .rsvp dt { color: var(--sage-soft); }
+        .rsvp dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .empty { text-align: center; padding: 40px 16px; color: var(--sage-soft); }
+        .toast {
+            position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+            background: var(--sage-dark); color: #fff; padding: 10px 18px; border-radius: 999px;
+            font-size: 14px; box-shadow: 0 6px 20px rgb(0 0 0 / .15); max-width: calc(100% - 32px);
+        }
+        @media (max-width: 560px) { .filters { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sara &amp; Moussa</h1>
+        <p>RSVP responses</p>
+    </header>
+
+    <main>
+        <form id="login" class="card hidden" autocomplete="on">
+            <h2>Sign in</h2>
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="username" required>
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" required>
+            <button type="submit">Sign in</button>
+            <div class="error" id="loginError"></div>
+        </form>
+
+        <section id="dashboard" class="hidden">
+            <div class="toolbar">
+                <div>
+                    <span class="live" id="live">Connecting…</span>
+                    <span class="who" id="who"></span>
+                </div>
+                <div class="actions">
+                    <button class="ghost" id="markSeen" type="button">Mark all as seen</button>
+                    <button class="ghost" id="exportCsv" type="button">Download CSV</button>
+                    <button class="ghost" id="signOut" type="button">Sign out</button>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="card stat"><div class="num" id="sResponses">0</div><div class="lbl">Responses</div></div>
+                <div class="card stat"><div class="num" id="sGuests">0</div><div class="lbl">Guests coming</div></div>
+                <div class="card stat"><div class="num" id="sChildren">0</div><div class="lbl">Children</div></div>
+                <div class="card stat"><div class="num" id="sDeclined">0</div><div class="lbl">Can't make it</div></div>
+                <div class="card stat"><div class="num" id="sNew">0</div><div class="lbl">New</div></div>
+            </div>
+
+            <div class="filters">
+                <input id="search" type="search" placeholder="Search name, email, message…">
+                <select id="filter">
+                    <option value="all">All responses</option>
+                    <option value="yes">Attending</option>
+                    <option value="no">Not attending</option>
+                    <option value="new">New only</option>
+                </select>
+            </div>
+
+            <div class="list" id="list"></div>
+        </section>
+    </main>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <script src="js/supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+    <script>
+        const cfg = window.SUPABASE_CONFIG || {};
+        const db = supabase.createClient(cfg.url, cfg.anonKey);
+        const SEEN_KEY = "rsvps_last_seen";
+
+        const $ = id => document.getElementById(id);
+        let rows = [];
+        let lastSeen = readSeen();
+        let channel = null;
+
+        function readSeen() {
+            try { return localStorage.getItem(SEEN_KEY) || "1970-01-01T00:00:00Z"; } catch { return "1970-01-01T00:00:00Z"; }
+        }
+        function writeSeen(v) {
+            try { localStorage.setItem(SEEN_KEY, v); } catch {}
+        }
+        const isNew = r => r.created_at > lastSeen;
+
+        function toast(msg) {
+            const t = $("toast");
+            t.textContent = msg;
+            t.classList.remove("hidden");
+            clearTimeout(toast.timer);
+            toast.timer = setTimeout(() => t.classList.add("hidden"), 4000);
+        }
+
+        function el(tag, cls, text) {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (text != null) e.textContent = text;
+            return e;
+        }
+
+        const fmtDate = iso => new Date(iso).toLocaleString("en-GB", {
+            day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+        });
+
+        function render() {
+            const yes = rows.filter(r => r.attendance === "yes");
+            $("sResponses").textContent = rows.length;
+            $("sGuests").textContent = yes.reduce((n, r) => n + (r.guest_count || 0) + (r.children_count || 0), 0);
+            $("sChildren").textContent = yes.reduce((n, r) => n + (r.children_count || 0), 0);
+            $("sDeclined").textContent = rows.length - yes.length;
+            $("sNew").textContent = rows.filter(isNew).length;
+
+            const q = $("search").value.trim().toLowerCase();
+            const f = $("filter").value;
+            const shown = rows.filter(r => {
+                if (f === "yes" && r.attendance !== "yes") return false;
+                if (f === "no" && r.attendance !== "no") return false;
+                if (f === "new" && !isNew(r)) return false;
+                if (!q) return true;
+                return [r.full_name, r.email, r.message, r.dietary_requirements]
+                    .some(v => (v || "").toLowerCase().includes(q));
+            });
+
+            const list = $("list");
+            list.replaceChildren();
+            if (!shown.length) {
+                list.append(el("div", "card empty", rows.length ? "No responses match." : "No RSVPs yet."));
+                return;
+            }
+            for (const r of shown) {
+                const card = el("article", "card rsvp" + (isNew(r) ? " new" : ""));
+                const top = el("div", "top");
+                top.append(el("div", "name", r.full_name), el("div", "when", fmtDate(r.created_at)));
+                const tags = el("div", "tags");
+                if (isNew(r)) tags.append(el("span", "tag badge", "New"));
+                tags.append(el("span", "tag " + r.attendance, r.attendance === "yes" ? "Attending" : "Not attending"));
+                if (r.attendance === "yes") {
+                    tags.append(el("span", "tag", `${r.guest_count} ${r.guest_count === 1 ? "guest" : "guests"}`));
+                    if (r.children_count) tags.append(el("span", "tag", `${r.children_count} ${r.children_count === 1 ? "child" : "children"}`));
+                }
+                const dl = el("dl");
+                const add = (k, v) => { if (v) dl.append(el("dt", null, k), el("dd", null, v)); };
+                add("Email", r.email);
+                add("Dietary", r.dietary_requirements);
+                add("Message", r.message);
+                card.append(top, tags);
+                if (dl.children.length) card.append(dl);
+                list.append(card);
+            }
+        }
+
+        async function load() {
+            const { data, error } = await db.from("rsvps").select("*").order("created_at", { ascending: false });
+            if (error) { toast("Could not load RSVPs: " + error.message); return; }
+            rows = data;
+            render();
+        }
+
+        function subscribe() {
+            channel = db.channel("rsvps-live")
+                .on("postgres_changes", { event: "INSERT", schema: "public", table: "rsvps" }, payload => {
+                    rows.unshift(payload.new);
+                    render();
+                    toast(`New RSVP from ${payload.new.full_name}`);
+                })
+                .subscribe(status => {
+                    const live = $("live");
+                    live.classList.toggle("on", status === "SUBSCRIBED");
+                    live.textContent = status === "SUBSCRIBED" ? "Live" : "Offline";
+                });
+        }
+
+        // Spreadsheet-safe CSV: values starting with = + - @ tab or CR are prefixed with '
+        function csvCell(v) {
+            let s = v == null ? "" : String(v);
+            if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+            return `"${s.replace(/"/g, '""')}"`;
+        }
+        function exportCsv() {
+            const head = ["Submitted", "Name", "Email", "Attending", "Guests", "Children", "Dietary", "Message"];
+            const body = rows.map(r => [
+                fmtDate(r.created_at), r.full_name, r.email, r.attendance === "yes" ? "Yes" : "No",
+                r.guest_count, r.children_count, r.dietary_requirements, r.message
+            ]);
+            const csv = [head, ...body].map(line => line.map(csvCell).join(",")).join("\n");
+            const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+            const a = Object.assign(document.createElement("a"), { href: url, download: "rsvps-sara-moussa.csv" });
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function showDashboard(session) {
+            $("login").classList.add("hidden");
+            $("dashboard").classList.remove("hidden");
+            $("who").textContent = "· " + session.user.email;
+            await load();
+            if (!channel) subscribe();
+        }
+        function showLogin() {
+            $("dashboard").classList.add("hidden");
+            $("login").classList.remove("hidden");
+            if (channel) { db.removeChannel(channel); channel = null; }
+        }
+
+        $("login").addEventListener("submit", async e => {
+            e.preventDefault();
+            $("loginError").textContent = "";
+            const { data, error } = await db.auth.signInWithPassword({
+                email: $("email").value.trim(),
+                password: $("password").value
+            });
+            if (error) { $("loginError").textContent = error.message; return; }
+            $("password").value = "";
+            showDashboard(data.session);
+        });
+        $("signOut").addEventListener("click", async () => { await db.auth.signOut(); showLogin(); });
+        $("markSeen").addEventListener("click", () => {
+            lastSeen = rows.length ? rows[0].created_at : new Date().toISOString();
+            writeSeen(lastSeen);
+            render();
+        });
+        $("exportCsv").addEventListener("click", exportCsv);
+        $("search").addEventListener("input", render);
+        $("filter").addEventListener("change", render);
+
+        db.auth.getSession().then(({ data }) => data.session ? showDashboard(data.session) : showLogin());
+    </script>
+</body>
+</html>
