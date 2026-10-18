@@ -31309,7 +31309,7 @@ function x3() {
             };
             const {
                 error: r
-            } = await rd.from("rsvps").insert(n);
+            } = await rd.from("wedding_rsvps").insert(n);
             if (r) throw r;
             return {
                 isUpdate: !1
@@ -31785,26 +31785,6 @@ function E3() {
                                     onChange: C => x(_, C.target.value),
                                     className: "bg-ivory border-[#c5a46d]/30 text-sage-dark placeholder:text-sage-dark/50 focus:border-[#c5a46d]",
                                     placeholder: e("rsvp.name")
-                                }), _ === 0 && h.jsx(Fr, {
-                                    type: "email",
-                                    required: !0,
-                                    value: E.email,
-                                    onChange: C => v(_, C.target.value),
-                                    className: "bg-ivory border-[#c5a46d]/30 text-sage-dark placeholder:text-sage-dark/50 focus:border-[#c5a46d]",
-                                    placeholder: e("rsvp.email")
-                                }), h.jsxs("div", {
-                                    className: "space-y-2",
-                                    children: [h.jsx(ht, {
-                                        htmlFor: `dietary-${_}`,
-                                        className: "text-sm text-sage-dark/80",
-                                        children: e("rsvp.dietary")
-                                    }), h.jsx(Fr, {
-                                        id: `dietary-${_}`,
-                                        value: E.dietaryRequirements,
-                                        onChange: C => y(_, C.target.value),
-                                        className: "bg-ivory border-[#c5a46d]/30 text-sage-dark placeholder:text-sage-dark/50 focus:border-[#c5a46d]",
-                                        placeholder: e("rsvp.dietaryPlaceholder")
-                                    })]
                                 })]
                             }, _))
                         })]

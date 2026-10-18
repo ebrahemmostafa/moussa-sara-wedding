@@ -1,6 +1,8 @@
 -- Run once in Supabase: SQL Editor → New query → paste → Run.
+-- Replace YOUR-PASSCODE below with the passcode for rsvps.html before running.
+-- (This repo is public, so the real passcode is not stored here.)
 
-create table if not exists public.rsvps (
+create table if not exists public.wedding_rsvps (
   id                   uuid primary key default gen_random_uuid(),
   created_at           timestamptz not null default now(),
   full_name            text not null check (char_length(full_name) between 1 and 500),
@@ -13,40 +15,33 @@ create table if not exists public.rsvps (
   message              text check (char_length(message) <= 2000)
 );
 
-alter table public.rsvps enable row level security;
+alter table public.wedding_rsvps enable row level security;
 
--- Guests (not signed in) can only add an RSVP. They cannot read, edit or delete.
-drop policy if exists "guests can submit" on public.rsvps;
-create policy "guests can submit" on public.rsvps
+-- Guests can only add an RSVP: no reading, editing or deleting.
+revoke all on public.wedding_rsvps from anon, authenticated;
+drop policy if exists "guests can submit" on public.wedding_rsvps;
+create policy "guests can submit" on public.wedding_rsvps
   for insert to anon with check (true);
-
--- Only accounts listed in rsvp_admins can read. Being signed in is not enough,
--- because Supabase allows public sign-ups unless you turn them off.
-create table if not exists public.rsvp_admins (
-  user_id uuid primary key references auth.users (id) on delete cascade
-);
-alter table public.rsvp_admins enable row level security;
-revoke all on public.rsvp_admins from anon, authenticated;
-
-drop policy if exists "admins can read" on public.rsvps;
-create policy "admins can read" on public.rsvps
-  for select to authenticated
-  using (exists (select 1 from public.rsvp_admins a where a.user_id = auth.uid()));
-
--- Guests may only fill in the form fields; id and created_at are always set by the database.
-revoke insert on public.rsvps from anon;
+-- Only the form fields; id and created_at are always set by the database.
 grant insert (full_name, email, attendance, guest_count, adult_count, children_count, dietary_requirements, message)
-  on public.rsvps to anon;
-grant select on public.rsvps to authenticated;
+  on public.wedding_rsvps to anon;
 
--- Live updates on rsvps.html
-do $$ begin
-  alter publication supabase_realtime add table public.rsvps;
-exception when duplicate_object then null; end $$;
+-- rsvps.html reads the list through this function, which checks the passcode
+-- on the server. A wrong passcode waits 2 seconds to slow down guessing.
+create or replace function public.get_wedding_rsvps(passcode text)
+returns setof public.wedding_rsvps
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if passcode is distinct from 'YOUR-PASSCODE' then
+    perform pg_sleep(2);
+    raise exception 'Wrong passcode' using errcode = '28P01';
+  end if;
+  return query select * from public.wedding_rsvps order by created_at desc;
+end;
+$$;
 
--- After creating your admin user(s) in Authentication → Users, add each one:
---   insert into public.rsvp_admins (user_id)
---   select id from auth.users where email = 'you@example.com';
---
--- Also recommended: Authentication → Sign In / Providers → Email →
--- turn OFF "Allow new users to sign up".
+revoke all on function public.get_wedding_rsvps(text) from public;
+grant execute on function public.get_wedding_rsvps(text) to anon;

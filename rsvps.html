@@ -97,13 +97,11 @@
     </header>
 
     <main>
-        <form id="login" class="card hidden" autocomplete="on">
-            <h2>Sign in</h2>
-            <label for="email">Email</label>
-            <input id="email" type="email" autocomplete="username" required>
-            <label for="password">Password</label>
-            <input id="password" type="password" autocomplete="current-password" required>
-            <button type="submit">Sign in</button>
+        <form id="login" class="card hidden" autocomplete="off">
+            <h2>Enter passcode</h2>
+            <label for="passcode">Passcode</label>
+            <input id="passcode" type="password" inputmode="numeric" autocomplete="off" required>
+            <button type="submit" id="unlock">Open</button>
             <div class="error" id="loginError"></div>
         </form>
 
@@ -111,12 +109,12 @@
             <div class="toolbar">
                 <div>
                     <span class="live" id="live">Connecting…</span>
-                    <span class="who" id="who"></span>
+                    
                 </div>
                 <div class="actions">
                     <button class="ghost" id="markSeen" type="button">Mark all as seen</button>
                     <button class="ghost" id="exportCsv" type="button">Download CSV</button>
-                    <button class="ghost" id="signOut" type="button">Sign out</button>
+                    <button class="ghost" id="signOut" type="button">Lock</button>
                 </div>
             </div>
 
@@ -148,13 +146,16 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
     <script>
         const cfg = window.SUPABASE_CONFIG || {};
-        const db = supabase.createClient(cfg.url, cfg.anonKey);
+        const db = supabase.createClient(cfg.url, cfg.anonKey, { auth: { persistSession: false } });
         const SEEN_KEY = "rsvps_last_seen";
+        const CODE_KEY = "rsvps_passcode";
+        const POLL_MS = 20000;
 
         const $ = id => document.getElementById(id);
         let rows = [];
         let lastSeen = readSeen();
-        let channel = null;
+        let passcode = null;
+        let pollTimer = null;
 
         function readSeen() {
             try { return localStorage.getItem(SEEN_KEY) || "1970-01-01T00:00:00Z"; } catch { return "1970-01-01T00:00:00Z"; }
@@ -230,25 +231,29 @@
             }
         }
 
-        async function load() {
-            const { data, error } = await db.from("rsvps").select("*").order("created_at", { ascending: false });
-            if (error) { toast("Could not load RSVPs: " + error.message); return; }
-            rows = data;
-            render();
+        async function fetchRows(code) {
+            const { data, error } = await db.rpc("get_wedding_rsvps", { passcode: code });
+            if (error) throw error;
+            return data;
         }
 
-        function subscribe() {
-            channel = db.channel("rsvps-live")
-                .on("postgres_changes", { event: "INSERT", schema: "public", table: "rsvps" }, payload => {
-                    rows.unshift(payload.new);
-                    render();
-                    toast(`New RSVP from ${payload.new.full_name}`);
-                })
-                .subscribe(status => {
-                    const live = $("live");
-                    live.classList.toggle("on", status === "SUBSCRIBED");
-                    live.textContent = status === "SUBSCRIBED" ? "Live" : "Offline";
-                });
+        async function poll() {
+            const live = $("live");
+            try {
+                const data = await fetchRows(passcode);
+                const known = new Set(rows.map(r => r.id));
+                const fresh = data.filter(r => !known.has(r.id));
+                rows = data;
+                render();
+                if (fresh.length && known.size) {
+                    toast(fresh.length === 1 ? `New RSVP from ${fresh[0].full_name}` : `${fresh.length} new RSVPs`);
+                }
+                live.classList.add("on");
+                live.textContent = "Live · updates every 20s";
+            } catch (err) {
+                live.classList.remove("on");
+                live.textContent = "Offline";
+            }
         }
 
         // Spreadsheet-safe CSV: values starting with = + - @ tab or CR are prefixed with '
@@ -270,31 +275,49 @@
             URL.revokeObjectURL(url);
         }
 
-        async function showDashboard(session) {
+        async function unlock(code, quiet) {
+            const btn = $("unlock");
+            btn.disabled = true;
+            $("loginError").textContent = "";
+            try {
+                rows = await fetchRows(code);
+            } catch (err) {
+                btn.disabled = false;
+                try { sessionStorage.removeItem(CODE_KEY); } catch {}
+                if (!quiet) $("loginError").textContent = err.code === "28P01" ? "Wrong passcode" : "Could not connect: " + err.message;
+                showLogin();
+                return;
+            }
+            btn.disabled = false;
+            passcode = code;
+            try { sessionStorage.setItem(CODE_KEY, code); } catch {}
             $("login").classList.add("hidden");
             $("dashboard").classList.remove("hidden");
-            $("who").textContent = "· " + session.user.email;
-            await load();
-            if (!channel) subscribe();
+            render();
+            $("live").classList.add("on");
+            $("live").textContent = "Live · updates every 20s";
+            clearInterval(pollTimer);
+            pollTimer = setInterval(poll, POLL_MS);
         }
         function showLogin() {
+            clearInterval(pollTimer);
+            passcode = null;
+            rows = [];
             $("dashboard").classList.add("hidden");
             $("login").classList.remove("hidden");
-            if (channel) { db.removeChannel(channel); channel = null; }
+            $("passcode").focus();
         }
 
-        $("login").addEventListener("submit", async e => {
+        $("login").addEventListener("submit", e => {
             e.preventDefault();
-            $("loginError").textContent = "";
-            const { data, error } = await db.auth.signInWithPassword({
-                email: $("email").value.trim(),
-                password: $("password").value
-            });
-            if (error) { $("loginError").textContent = error.message; return; }
-            $("password").value = "";
-            showDashboard(data.session);
+            const code = $("passcode").value.trim();
+            $("passcode").value = "";
+            unlock(code);
         });
-        $("signOut").addEventListener("click", async () => { await db.auth.signOut(); showLogin(); });
+        $("signOut").addEventListener("click", () => {
+            try { sessionStorage.removeItem(CODE_KEY); } catch {}
+            showLogin();
+        });
         $("markSeen").addEventListener("click", () => {
             lastSeen = rows.length ? rows[0].created_at : new Date().toISOString();
             writeSeen(lastSeen);
@@ -304,7 +327,9 @@
         $("search").addEventListener("input", render);
         $("filter").addEventListener("change", render);
 
-        db.auth.getSession().then(({ data }) => data.session ? showDashboard(data.session) : showLogin());
+        let saved = null;
+        try { saved = sessionStorage.getItem(CODE_KEY); } catch {}
+        saved ? unlock(saved, true) : showLogin();
     </script>
 </body>
 </html>
