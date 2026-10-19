@@ -22350,8 +22350,8 @@ const YF = "./assets/images/gallery-1-CndRyTXZ.jpg",
     JF = "./assets/images/gallery-3-BqTMMcNY.jpg",
     ZF = "./assets/images/gallery-4-D3agzgGx.jpg",
     e4 = "./assets/images/gallery-5-Ca9X0lht.jpg",
-    dw = ["./assets/images/couple/photo-1.jpg", "./assets/images/couple/photo-2.jpg", "./assets/images/couple/photo-3.jpg", "./assets/images/couple/photo-4.jpg", "./assets/images/couple/photo-5.jpg", "./assets/images/couple/photo-6.jpg"],
-    hw = ["center 30%", "center 55%", "center 25%", "center 40%", "center 40%", "center 50%"];
+    dw = ["./assets/images/couple/photo-1.jpg", "./assets/images/couple/photo-7.jpg", "./assets/images/couple/photo-3.jpg", "./assets/images/couple/photo-4.jpg", "./assets/images/couple/photo-5.jpg", "./assets/images/couple/photo-6.jpg"],
+    hw = ["center 30%", "center 35%", "center 25%", "center 40%", "center 40%", "center 50%"];
 
 function t4() {
     const {
@@ -31971,8 +31971,8 @@ const P3 = "./assets/images/floral-vase-6x28LN74.png",
     F3 = "./assets/images/gallery-8-LSBB5t-f.jpg",
     V3 = "./assets/images/gallery-9-C_h0QLUe.jpg",
     U3 = "./assets/images/gallery-10-BbneIAac.jpg",
-    $w = ["./assets/images/couple/photo-2.jpg", "./assets/images/couple/photo-1.jpg", "./assets/images/couple/photo-4.jpg", "./assets/images/couple/photo-3.jpg", "./assets/images/couple/photo-6.jpg", "./assets/images/couple/photo-5.jpg"],
-    Fw = ["center 55%", "center 30%", "center 40%", "center 25%", "center 50%", "center 40%"],
+    $w = ["./assets/images/couple/photo-7.jpg", "./assets/images/couple/photo-1.jpg", "./assets/images/couple/photo-4.jpg", "./assets/images/couple/photo-3.jpg", "./assets/images/couple/photo-6.jpg", "./assets/images/couple/photo-5.jpg"],
+    Fw = ["center 35%", "center 30%", "center 40%", "center 25%", "center 50%", "center 40%"],
     ms = {
         couple_name_1: "Sara",
         couple_name_2: "Moussa",
