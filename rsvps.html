@@ -121,7 +121,6 @@
             <div class="stats">
                 <div class="card stat"><div class="num" id="sResponses">0</div><div class="lbl">Responses</div></div>
                 <div class="card stat"><div class="num" id="sGuests">0</div><div class="lbl">Guests coming</div></div>
-                <div class="card stat"><div class="num" id="sChildren">0</div><div class="lbl">Children</div></div>
                 <div class="card stat"><div class="num" id="sDeclined">0</div><div class="lbl">Can't make it</div></div>
                 <div class="card stat"><div class="num" id="sNew">0</div><div class="lbl">New</div></div>
             </div>
@@ -188,7 +187,6 @@
             const yes = rows.filter(r => r.attendance === "yes");
             $("sResponses").textContent = rows.length;
             $("sGuests").textContent = yes.reduce((n, r) => n + (r.guest_count || 0) + (r.children_count || 0), 0);
-            $("sChildren").textContent = yes.reduce((n, r) => n + (r.children_count || 0), 0);
             $("sDeclined").textContent = rows.length - yes.length;
             $("sNew").textContent = rows.filter(isNew).length;
 
@@ -264,10 +262,10 @@
             return `"${s.replace(/"/g, '""')}"`;
         }
         function exportCsv() {
-            const head = ["Submitted", "Name", "Email", "Attending", "Guests", "Children", "Dietary", "Message"];
+            const head = ["Submitted", "Name", "Email", "Attending", "Guests", "Message"];
             const body = rows.map(r => [
                 fmtDate(r.created_at), r.full_name, r.email, r.attendance === "yes" ? "Yes" : "No",
-                r.guest_count, r.children_count, r.dietary_requirements, r.message
+                r.guest_count + (r.children_count || 0), r.message
             ]);
             const csv = [head, ...body].map(line => line.map(csvCell).join(",")).join("\n");
             const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
